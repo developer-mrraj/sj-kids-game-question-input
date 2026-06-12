@@ -4,7 +4,7 @@ const path = require('path');
 
 const app = express();
 const PORT = 3000;
-const API_URL = 'http://192.168.1.3:8080';
+const API_URL = 'http://13.200.242.254:8080/';
 
 // Serve the index.html file and any static assets
 app.use(express.static(__dirname));
