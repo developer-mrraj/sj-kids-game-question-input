@@ -1,0 +1,1088 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SJ Kids – Admin Upload Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    /* ── Reset & Tokens ─────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0d0f1a;
+      --surface:   #13162b;
+      --card:      #181c35;
+      --border:    #252a4a;
+      --accent:    #6c63ff;
+      --accent2:   #a78bfa;
+      --success:   #22d3a7;
+      --error:     #f87171;
+      --warn:      #fb923c;
+      --text:      #e8eaf6;
+      --muted:     #8890b5;
+      --radius:    14px;
+      --shadow:    0 4px 32px rgba(0,0,0,.45);
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+    }
+
+    /* ── Sidebar ─────────────────────────────────────────────── */
+    .sidebar {
+      width: 240px;
+      min-height: 100vh;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      top: 0; left: 0; bottom: 0;
+      z-index: 100;
+    }
+    .sidebar-logo {
+      padding: 28px 24px 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    .logo-icon {
+      width: 40px; height: 40px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px;
+    }
+    .logo-text { font-size: 16px; font-weight: 700; line-height: 1.2; }
+    .logo-sub  { font-size: 11px; color: var(--muted); font-weight: 400; }
+
+    .sidebar-nav { flex: 1; padding: 16px 12px; }
+    .nav-section-title {
+      font-size: 10px; letter-spacing: .1em; text-transform: uppercase;
+      color: var(--muted); padding: 8px 12px 6px; font-weight: 600;
+    }
+    .nav-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 12px; border-radius: 10px;
+      font-size: 13.5px; font-weight: 500; color: var(--muted);
+      cursor: pointer; transition: all .2s; margin-bottom: 2px;
+    }
+    .nav-item:hover { background: var(--border); color: var(--text); }
+    .nav-item.active { background: rgba(108,99,255,.18); color: var(--accent2); }
+    .nav-item .icon { font-size: 16px; width: 20px; text-align: center; }
+
+    .sidebar-auth {
+      padding: 16px; border-top: 1px solid var(--border);
+    }
+    .auth-badge {
+      background: var(--card); border-radius: 10px; padding: 10px 12px;
+      font-size: 12px; display: flex; align-items: center; gap: 8px;
+    }
+    .auth-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--error); flex-shrink: 0; }
+    .auth-dot.online { background: var(--success); }
+    .auth-label { color: var(--muted); font-size: 11px; }
+    .auth-user  { font-weight: 600; font-size: 12px; }
+
+    /* ── Main ────────────────────────────────────────────────── */
+    .main {
+      margin-left: 240px;
+      flex: 1;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .topbar {
+      padding: 20px 32px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+      display: flex; align-items: center; justify-content: space-between;
+      position: sticky; top: 0; z-index: 50;
+    }
+    .topbar-title { font-size: 18px; font-weight: 700; }
+    .topbar-sub   { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 9px 18px; border-radius: 10px; font-size: 13px;
+      font-weight: 600; cursor: pointer; border: none; font-family: inherit;
+      transition: all .2s;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: #fff; box-shadow: 0 0 24px rgba(108,99,255,.35);
+    }
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 28px rgba(108,99,255,.5); }
+    .btn-ghost { background: var(--card); color: var(--text); border: 1px solid var(--border); }
+    .btn-ghost:hover { border-color: var(--accent); color: var(--accent2); }
+    .btn-danger { background: rgba(248,113,113,.15); color: var(--error); border: 1px solid rgba(248,113,113,.3); }
+    .btn-danger:hover { background: rgba(248,113,113,.25); }
+    .btn:disabled { opacity: .5; cursor: not-allowed; transform: none !important; }
+
+    .content { padding: 28px 32px; flex: 1; }
+
+    /* ── Page sections ───────────────────────────────────────── */
+    .page { display: none; }
+    .page.active { display: block; }
+
+    /* ── Cards ───────────────────────────────────────────────── */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px;
+      margin-bottom: 24px;
+    }
+    .card-header {
+      display: flex; align-items: flex-start; justify-content: space-between;
+      margin-bottom: 24px;
+    }
+    .card-title { font-size: 15px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+    .card-desc  { font-size: 12.5px; color: var(--muted); margin-top: 4px; }
+    .badge {
+      font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 6px;
+      text-transform: uppercase; letter-spacing: .05em;
+    }
+    .badge-post { background: rgba(34,211,167,.15); color: var(--success); }
+    .badge-get  { background: rgba(108,99,255,.15); color: var(--accent2); }
+
+    /* ── Form elements ───────────────────────────────────────── */
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-group.full { grid-column: 1 / -1; }
+    label { font-size: 12px; font-weight: 600; color: var(--muted); letter-spacing: .04em; }
+    input[type="text"], input[type="password"], input[type="number"], select {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; padding: 10px 14px; font-size: 13.5px;
+      color: var(--text); font-family: inherit; outline: none;
+      transition: border-color .2s;
+    }
+    input:focus, select:focus { border-color: var(--accent); }
+    input::placeholder { color: var(--muted); }
+    select option { background: var(--surface); }
+
+    .toggle-row {
+      display: flex; align-items: center; gap: 10px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; padding: 10px 14px;
+    }
+    .toggle { position: relative; width: 40px; height: 22px; }
+    .toggle input { opacity: 0; width: 0; height: 0; }
+    .toggle-slider {
+      position: absolute; inset: 0; cursor: pointer;
+      background: var(--border); border-radius: 22px; transition: .3s;
+    }
+    .toggle-slider::before {
+      content: ''; position: absolute;
+      width: 16px; height: 16px; left: 3px; bottom: 3px;
+      background: var(--muted); border-radius: 50%; transition: .3s;
+    }
+    .toggle input:checked + .toggle-slider { background: var(--accent); }
+    .toggle input:checked + .toggle-slider::before { transform: translateX(18px); background: #fff; }
+    .toggle-label { font-size: 13px; font-weight: 500; }
+    .toggle-hint  { font-size: 11px; color: var(--muted); }
+
+    /* ── Drop Zone ───────────────────────────────────────────── */
+    .drop-zone {
+      border: 2px dashed var(--border); border-radius: 12px;
+      padding: 32px 20px; text-align: center; cursor: pointer;
+      transition: all .25s; background: var(--surface); position: relative;
+    }
+    .drop-zone:hover, .drop-zone.dragover {
+      border-color: var(--accent); background: rgba(108,99,255,.06);
+    }
+    .drop-zone input[type="file"] {
+      position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+    }
+    .drop-icon { font-size: 32px; margin-bottom: 8px; }
+    .drop-title { font-size: 13.5px; font-weight: 600; }
+    .drop-sub   { font-size: 11.5px; color: var(--muted); margin-top: 4px; }
+    .drop-chip  { font-size: 11px; background: var(--border); border-radius: 6px; padding: 2px 8px; display: inline-block; margin-top: 8px; }
+    .drop-zone.has-file { border-color: var(--success); border-style: solid; }
+    .drop-zone.has-file .drop-icon::after { content: ' ✅'; }
+    .file-name  { font-size: 12px; color: var(--success); font-weight: 600; margin-top: 6px; }
+
+    /* ── Alert ───────────────────────────────────────────────── */
+    .alert {
+      border-radius: 10px; padding: 14px 16px; font-size: 13px;
+      display: flex; gap: 10px; align-items: flex-start; margin-top: 16px;
+    }
+    .alert-success { background: rgba(34,211,167,.1); border: 1px solid rgba(34,211,167,.3); color: var(--success); }
+    .alert-error   { background: rgba(248,113,113,.1); border: 1px solid rgba(248,113,113,.3); color: var(--error); }
+    .alert-info    { background: rgba(108,99,255,.1);  border: 1px solid rgba(108,99,255,.3);  color: var(--accent2); }
+    .alert-icon    { font-size: 16px; flex-shrink: 0; }
+    .alert-body    { flex: 1; }
+    .alert-title   { font-weight: 700; margin-bottom: 4px; }
+    .error-list    { list-style: disc; padding-left: 16px; margin-top: 6px; font-size: 12px; line-height: 1.7; }
+
+    /* ── Spinner ─────────────────────────────────────────────── */
+    .spinner {
+      display: inline-block; width: 16px; height: 16px;
+      border: 2px solid rgba(255,255,255,.3); border-top-color: #fff;
+      border-radius: 50%; animation: spin .7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Stats bar ───────────────────────────────────────────── */
+    .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 28px; }
+    .stat-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 20px 22px;
+      display: flex; align-items: center; gap: 14px;
+    }
+    .stat-icon {
+      width: 44px; height: 44px; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0;
+    }
+    .stat-val  { font-size: 22px; font-weight: 800; }
+    .stat-label{ font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+    /* ── Question Count Checker ──────────────────────────────── */
+    .count-result {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; padding: 16px 20px; margin-top: 16px; display: none;
+    }
+    .count-result.show { display: block; }
+    .count-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; font-size: 13px; }
+    .count-row:not(:last-child) { border-bottom: 1px solid var(--border); }
+    .count-key  { color: var(--muted); }
+    .count-val  { font-weight: 700; }
+    .avail-yes  { color: var(--success); }
+    .avail-no   { color: var(--error); }
+
+    /* ── Auth page ───────────────────────────────────────────── */
+    .auth-page {
+      display: flex; align-items: center; justify-content: center;
+      min-height: 100vh; padding: 24px;
+      background: radial-gradient(ellipse at 60% 20%, rgba(108,99,255,.18) 0%, transparent 60%),
+                  radial-gradient(ellipse at 10% 80%, rgba(167,139,250,.12) 0%, transparent 50%),
+                  var(--bg);
+    }
+    .auth-box {
+      width: 100%; max-width: 420px;
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 20px; padding: 40px 36px;
+      box-shadow: var(--shadow);
+    }
+    .auth-logo { text-align: center; margin-bottom: 32px; }
+    .auth-logo .logo-icon { width: 56px; height: 56px; font-size: 28px; margin: 0 auto 12px; }
+    .auth-logo h1 { font-size: 22px; font-weight: 800; }
+    .auth-logo p  { font-size: 13px; color: var(--muted); margin-top: 4px; }
+    .tab-row { display: flex; background: var(--surface); border-radius: 10px; padding: 4px; margin-bottom: 24px; }
+    .tab-btn {
+      flex: 1; padding: 8px; border-radius: 8px; font-size: 13px;
+      font-weight: 600; cursor: pointer; border: none; font-family: inherit;
+      color: var(--muted); background: transparent; transition: all .2s;
+    }
+    .tab-btn.active { background: var(--accent); color: #fff; }
+
+    /* ── Divider ─────────────────────────────────────────────── */
+    .divider { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
+
+    /* ── Endpoint pill ───────────────────────────────────────── */
+    .endpoint-pill {
+      font-size: 11px; font-family: monospace; background: var(--surface);
+      border: 1px solid var(--border); padding: 4px 10px; border-radius: 6px;
+      color: var(--muted); margin-top: 4px; display: inline-block;
+    }
+
+    /* ── Toast ───────────────────────────────────────────────── */
+    #toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
+    .toast {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 12px; padding: 12px 16px; font-size: 13px;
+      display: flex; align-items: center; gap: 10px; max-width: 340px;
+      animation: slideUp .3s ease; box-shadow: var(--shadow);
+    }
+    .toast.success { border-color: rgba(34,211,167,.4); }
+    .toast.error   { border-color: rgba(248,113,113,.4); }
+    @keyframes slideUp { from { transform: translateY(16px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    @keyframes fadeOut { to { opacity: 0; transform: translateY(8px); } }
+
+    /* ── Responsive ──────────────────────────────────────────── */
+    @media (max-width: 768px) {
+      .sidebar { width: 64px; }
+      .sidebar-logo .logo-text, .sidebar-logo .logo-sub, .nav-item span:not(.icon), .auth-badge, .nav-section-title { display: none; }
+      .sidebar-logo { padding: 16px; justify-content: center; }
+      .nav-item { justify-content: center; padding: 12px; }
+      .main { margin-left: 64px; }
+      .form-grid { grid-template-columns: 1fr; }
+      .stats-grid { grid-template-columns: 1fr; }
+      .content { padding: 16px; }
+      .topbar { padding: 16px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── AUTH SCREEN ───────────────────────────────────────────── -->
+<div id="auth-screen" class="auth-page" style="width:100%">
+  <div class="auth-box">
+    <div class="auth-logo">
+      <div class="logo-icon">🎮</div>
+      <h1>SJ Kids Admin</h1>
+      <p>Content Upload Dashboard</p>
+    </div>
+
+    <div class="tab-row">
+      <button class="tab-btn active" id="tab-login" onclick="switchAuthTab('login')">Login</button>
+      <button class="tab-btn" id="tab-signup" onclick="switchAuthTab('signup')">Sign Up</button>
+    </div>
+
+    <form id="auth-form" onsubmit="handleAuth(event)">
+      <div class="form-group" style="margin-bottom:14px">
+        <label>USERNAME</label>
+        <input id="auth-username" type="text" placeholder="Enter username" required />
+      </div>
+      <div class="form-group" style="margin-bottom:20px">
+        <label>PASSWORD</label>
+        <input id="auth-password" type="password" placeholder="Enter password" required />
+      </div>
+      <button id="auth-btn" type="submit" class="btn btn-primary" style="width:100%;justify-content:center">
+        <span id="auth-btn-text">Login</span>
+      </button>
+    </form>
+    <div id="auth-alert" style="display:none" class="alert alert-error">
+      <span class="alert-icon">⚠️</span>
+      <div class="alert-body"><div id="auth-alert-msg"></div></div>
+    </div>
+
+    <div style="margin-top:20px; text-align:center; font-size:12px; color:var(--muted)">
+      Connected to <code style="color:var(--accent2); font-size:11px">192.168.1.3:8080</code>
+    </div>
+  </div>
+</div>
+
+<!-- ── DASHBOARD ─────────────────────────────────────────────── -->
+<div id="dashboard" style="display:none; width:100%; display:flex; flex-direction:row">
+
+  <!-- Sidebar -->
+  <nav class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-icon">🎮</div>
+      <div>
+        <div class="logo-text">SJ Kids</div>
+        <div class="logo-sub">Admin Panel</div>
+      </div>
+    </div>
+
+    <div class="sidebar-nav">
+      <div class="nav-section-title">Overview</div>
+      <div class="nav-item active" onclick="showPage('overview')" id="nav-overview">
+        <span class="icon">🏠</span><span>Dashboard</span>
+      </div>
+
+      <div class="nav-section-title" style="margin-top:16px">Uploads</div>
+      <div class="nav-item" onclick="showPage('levels')" id="nav-levels">
+        <span class="icon">📚</span><span>Levels & Questions</span>
+      </div>
+      <div class="nav-item" onclick="showPage('games')" id="nav-games">
+        <span class="icon">🎯</span><span>Game Questions</span>
+      </div>
+      <div class="nav-item" onclick="showPage('match')" id="nav-match">
+        <span class="icon">🔗</span><span>Match the Following</span>
+      </div>
+      <div class="nav-item" onclick="showPage('wordhunt')" id="nav-wordhunt">
+        <span class="icon">🔤</span><span>Word Hunt</span>
+      </div>
+
+      <div class="nav-section-title" style="margin-top:16px">Utilities</div>
+      <div class="nav-item" onclick="showPage('checker')" id="nav-checker">
+        <span class="icon">🔍</span><span>Question Count</span>
+      </div>
+    </div>
+
+    <div class="sidebar-auth">
+      <div class="auth-badge">
+        <div class="auth-dot online" id="auth-dot"></div>
+        <div>
+          <div class="auth-user" id="sidebar-user">–</div>
+          <div class="auth-label">Logged in</div>
+        </div>
+        <button class="btn btn-danger" style="padding:4px 10px; font-size:11px; margin-left:auto" onclick="logout()">Exit</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main content -->
+  <div class="main">
+    <div class="topbar">
+      <div>
+        <div class="topbar-title" id="topbar-title">Dashboard</div>
+        <div class="topbar-sub" id="topbar-sub">Welcome to the SJ Kids Admin Panel</div>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- ── PAGE: Overview ──────────────────────────────────── -->
+      <div class="page active" id="page-overview">
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-icon" style="background:rgba(108,99,255,.15)">📚</div>
+            <div>
+              <div class="stat-val">Levels</div>
+              <div class="stat-label">Upload Levels & General Q's</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon" style="background:rgba(34,211,167,.15)">🎯</div>
+            <div>
+              <div class="stat-val">Games</div>
+              <div class="stat-label">Upload game question banks</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon" style="background:rgba(251,146,60,.15)">🔍</div>
+            <div>
+              <div class="stat-val">Verify</div>
+              <div class="stat-label">Check question availability</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">🚀 Quick Start Guide</div>
+              <div class="card-desc">Follow these steps to upload content</div>
+            </div>
+          </div>
+          <div style="display:flex; flex-direction:column; gap:14px">
+            <div style="display:flex; gap:14px; align-items:flex-start; padding:16px; background:var(--surface); border-radius:10px">
+              <div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;flex-shrink:0">1</div>
+              <div>
+                <div style="font-weight:600;font-size:13.5px">Upload Levels & General Questions</div>
+                <div style="color:var(--muted);font-size:12px;margin-top:3px">Start with the primary <code>.xlsx</code> file that maps levels to questions. Optionally attach a media ZIP.</div>
+              </div>
+            </div>
+            <div style="display:flex; gap:14px; align-items:flex-start; padding:16px; background:var(--surface); border-radius:10px">
+              <div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;flex-shrink:0">2</div>
+              <div>
+                <div style="font-weight:600;font-size:13.5px">Upload Game-Specific Questions</div>
+                <div style="color:var(--muted);font-size:12px;margin-top:3px">Use the Game Questions, Match the Following, and Word Hunt pages to populate mini-game banks.</div>
+              </div>
+            </div>
+            <div style="display:flex; gap:14px; align-items:flex-start; padding:16px; background:var(--surface); border-radius:10px">
+              <div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;flex-shrink:0">3</div>
+              <div>
+                <div style="font-weight:600;font-size:13.5px">Verify with Question Count Checker</div>
+                <div style="color:var(--muted);font-size:12px;margin-top:3px">Use the Utility checker to confirm a game has enough questions to be playable.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── PAGE: Levels & General Questions ───────────────── -->
+      <div class="page" id="page-levels">
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">📚 Upload Levels & General Questions <span class="badge badge-post">POST</span></div>
+              <div class="card-desc">Upload the primary level mappings and flashcard content</div>
+              <div class="endpoint-pill">POST /api/v1/admin/content/levels/upload</div>
+            </div>
+          </div>
+
+          <form id="form-levels" onsubmit="uploadLevels(event)">
+            <div class="form-grid">
+              <div class="form-group full">
+                <label>EXCEL FILE (.xlsx) — Required</label>
+                <div class="drop-zone" id="dz-levels-excel">
+                  <input type="file" id="levels-excel" accept=".xlsx" onchange="handleFileSelect(this,'dz-levels-excel','fn-levels-excel')" required />
+                  <div class="drop-icon">📊</div>
+                  <div class="drop-title">Drop your Excel file here</div>
+                  <div class="drop-sub">Contains Levels and Questions sheets</div>
+                  <span class="drop-chip">.xlsx</span>
+                  <div class="file-name" id="fn-levels-excel"></div>
+                </div>
+              </div>
+              <div class="form-group full">
+                <label>MEDIA ZIP — Optional</label>
+                <div class="drop-zone" id="dz-levels-zip">
+                  <input type="file" id="levels-zip" accept=".zip" onchange="handleFileSelect(this,'dz-levels-zip','fn-levels-zip')" />
+                  <div class="drop-icon">🗜️</div>
+                  <div class="drop-title">Drop media ZIP here (optional)</div>
+                  <div class="drop-sub">Images for questions and options</div>
+                  <span class="drop-chip">.zip</span>
+                  <div class="file-name" id="fn-levels-zip"></div>
+                </div>
+              </div>
+            </div>
+            <div style="margin-top:20px">
+              <button type="submit" class="btn btn-primary" id="btn-levels">
+                <span>⬆️ Upload</span>
+              </button>
+            </div>
+          </form>
+          <div id="res-levels"></div>
+        </div>
+      </div>
+
+      <!-- ── PAGE: Game Questions ────────────────────────────── -->
+      <div class="page" id="page-games">
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">🎯 Upload Game Questions <span class="badge badge-post">POST</span></div>
+              <div class="card-desc">Quiz, Feed the Animal, Balloon Pop and other standard games</div>
+              <div class="endpoint-pill">POST /api/v1/admin/content/games/questions/upload</div>
+            </div>
+          </div>
+          <form id="form-games" onsubmit="uploadGame(event,'games')">
+            <div class="form-grid">
+              <div class="form-group">
+                <label>STANDARD ID — Required</label>
+                <input type="number" id="games-standard" placeholder="e.g. 1, 2, 3" required min="1" />
+              </div>
+              <div class="form-group">
+                <label>GAME ID — Required</label>
+                <input type="number" id="games-gameid" placeholder="e.g. 15" required min="1" />
+              </div>
+              <div class="form-group full">
+                <label>OVERWRITE EXISTING QUESTIONS</label>
+                <div class="toggle-row">
+                  <label class="toggle">
+                    <input type="checkbox" id="games-overwrite" />
+                    <span class="toggle-slider"></span>
+                  </label>
+                  <span class="toggle-label">Overwrite mode</span>
+                  <span class="toggle-hint">— Wipe existing questions before importing</span>
+                </div>
+              </div>
+              <div class="form-group full">
+                <label>EXCEL FILE (.xlsx) — Required</label>
+                <div class="drop-zone" id="dz-games-excel">
+                  <input type="file" id="games-excel" accept=".xlsx" onchange="handleFileSelect(this,'dz-games-excel','fn-games-excel')" required />
+                  <div class="drop-icon">📊</div>
+                  <div class="drop-title">Drop your Excel file here</div>
+                  <div class="drop-sub">Game question bank</div>
+                  <span class="drop-chip">.xlsx</span>
+                  <div class="file-name" id="fn-games-excel"></div>
+                </div>
+              </div>
+            </div>
+            <div style="margin-top:20px">
+              <button type="submit" class="btn btn-primary" id="btn-games">
+                <span>⬆️ Upload</span>
+              </button>
+            </div>
+          </form>
+          <div id="res-games"></div>
+        </div>
+      </div>
+
+      <!-- ── PAGE: Match the Following ─────────────────────── -->
+      <div class="page" id="page-match">
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">🔗 Match the Following <span class="badge badge-post">POST</span></div>
+              <div class="card-desc">Upload question bank for the Match the Following mini-game</div>
+              <div class="endpoint-pill">POST /api/v1/admin/content/games/match-following/upload</div>
+            </div>
+          </div>
+          <form id="form-match" onsubmit="uploadGame(event,'match')">
+            <div class="form-grid">
+              <div class="form-group">
+                <label>STANDARD ID — Required</label>
+                <input type="number" id="match-standard" placeholder="e.g. 1, 2, 3" required min="1" />
+              </div>
+              <div class="form-group">
+                <label>GAME ID — Required</label>
+                <input type="number" id="match-gameid" placeholder="e.g. 15" required min="1" />
+              </div>
+              <div class="form-group full">
+                <label>OVERWRITE EXISTING QUESTIONS</label>
+                <div class="toggle-row">
+                  <label class="toggle">
+                    <input type="checkbox" id="match-overwrite" />
+                    <span class="toggle-slider"></span>
+                  </label>
+                  <span class="toggle-label">Overwrite mode</span>
+                  <span class="toggle-hint">— Wipe existing questions before importing</span>
+                </div>
+              </div>
+              <div class="form-group full">
+                <label>EXCEL FILE (.xlsx) — Required</label>
+                <div class="drop-zone" id="dz-match-excel">
+                  <input type="file" id="match-excel" accept=".xlsx" onchange="handleFileSelect(this,'dz-match-excel','fn-match-excel')" required />
+                  <div class="drop-icon">📊</div>
+                  <div class="drop-title">Drop your Excel file here</div>
+                  <div class="drop-sub">Match the Following question pairs</div>
+                  <span class="drop-chip">.xlsx</span>
+                  <div class="file-name" id="fn-match-excel"></div>
+                </div>
+              </div>
+            </div>
+            <div style="margin-top:20px">
+              <button type="submit" class="btn btn-primary" id="btn-match">
+                <span>⬆️ Upload</span>
+              </button>
+            </div>
+          </form>
+          <div id="res-match"></div>
+        </div>
+      </div>
+
+      <!-- ── PAGE: Word Hunt ────────────────────────────────── -->
+      <div class="page" id="page-wordhunt">
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">🔤 Word Hunt <span class="badge badge-post">POST</span></div>
+              <div class="card-desc">Upload question bank for the Word Hunt mini-game</div>
+              <div class="endpoint-pill">POST /api/v1/admin/content/games/word-hunt/upload</div>
+            </div>
+          </div>
+          <form id="form-wordhunt" onsubmit="uploadGame(event,'wordhunt')">
+            <div class="form-grid">
+              <div class="form-group">
+                <label>STANDARD ID — Required</label>
+                <input type="number" id="wordhunt-standard" placeholder="e.g. 1, 2, 3" required min="1" />
+              </div>
+              <div class="form-group">
+                <label>GAME ID — Required</label>
+                <input type="number" id="wordhunt-gameid" placeholder="e.g. 15" required min="1" />
+              </div>
+              <div class="form-group full">
+                <label>OVERWRITE EXISTING QUESTIONS</label>
+                <div class="toggle-row">
+                  <label class="toggle">
+                    <input type="checkbox" id="wordhunt-overwrite" />
+                    <span class="toggle-slider"></span>
+                  </label>
+                  <span class="toggle-label">Overwrite mode</span>
+                  <span class="toggle-hint">— Wipe existing questions before importing</span>
+                </div>
+              </div>
+              <div class="form-group full">
+                <label>EXCEL FILE (.xlsx) — Required</label>
+                <div class="drop-zone" id="dz-wordhunt-excel">
+                  <input type="file" id="wordhunt-excel" accept=".xlsx" onchange="handleFileSelect(this,'dz-wordhunt-excel','fn-wordhunt-excel')" required />
+                  <div class="drop-icon">📊</div>
+                  <div class="drop-title">Drop your Excel file here</div>
+                  <div class="drop-sub">Word Hunt question bank</div>
+                  <span class="drop-chip">.xlsx</span>
+                  <div class="file-name" id="fn-wordhunt-excel"></div>
+                </div>
+              </div>
+            </div>
+            <div style="margin-top:20px">
+              <button type="submit" class="btn btn-primary" id="btn-wordhunt">
+                <span>⬆️ Upload</span>
+              </button>
+            </div>
+          </form>
+          <div id="res-wordhunt"></div>
+        </div>
+      </div>
+
+      <!-- ── PAGE: Question Count Checker ──────────────────── -->
+      <div class="page" id="page-checker">
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">🔍 Question Count Checker <span class="badge badge-get">GET</span></div>
+              <div class="card-desc">Verify if a game has enough questions to be playable</div>
+              <div class="endpoint-pill">GET /api/v1/admin/content/games/questions/count</div>
+            </div>
+          </div>
+          <form onsubmit="checkCount(event)">
+            <div class="form-grid">
+              <div class="form-group">
+                <label>GAME ID</label>
+                <input type="number" id="check-gameid" placeholder="e.g. 15" required min="1" />
+              </div>
+              <div class="form-group">
+                <label>STANDARD ID</label>
+                <input type="number" id="check-standard" placeholder="e.g. 2" required min="1" />
+              </div>
+            </div>
+            <div style="margin-top:20px">
+              <button type="submit" class="btn btn-ghost" id="btn-check">
+                <span>🔍 Check Count</span>
+              </button>
+            </div>
+          </form>
+
+          <div class="count-result" id="count-result">
+            <div class="count-row">
+              <span class="count-key">Game ID</span>
+              <span class="count-val" id="cr-gameid">–</span>
+            </div>
+            <div class="count-row">
+              <span class="count-key">Standard ID</span>
+              <span class="count-val" id="cr-standard">–</span>
+            </div>
+            <div class="count-row">
+              <span class="count-key">Total Questions</span>
+              <span class="count-val" id="cr-total">–</span>
+            </div>
+            <div class="count-row">
+              <span class="count-key">Availability</span>
+              <span class="count-val" id="cr-avail">–</span>
+            </div>
+          </div>
+          <div id="res-checker"></div>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /main -->
+</div><!-- /dashboard -->
+
+<!-- Toast container -->
+<div id="toast-container"></div>
+
+<script>
+  // Use empty string so requests go to the same origin (our local proxy server)
+  const BASE_URL = '';
+  let authToken = localStorage.getItem('sj_admin_token') || '';
+  let authUser  = localStorage.getItem('sj_admin_user') || '';
+  let currentAuthTab = 'login';
+
+  /* ── Init ─────────────────────────────────────────────────── */
+  window.addEventListener('DOMContentLoaded', () => {
+    if (authToken) {
+      showDashboard();
+    } else {
+      document.getElementById('auth-screen').style.display = 'flex';
+      document.getElementById('dashboard').style.display = 'none';
+    }
+  });
+
+  /* ── Auth tab switch ──────────────────────────────────────── */
+  function switchAuthTab(tab) {
+    currentAuthTab = tab;
+    document.getElementById('tab-login').classList.toggle('active', tab === 'login');
+    document.getElementById('tab-signup').classList.toggle('active', tab === 'signup');
+    document.getElementById('auth-btn-text').textContent = tab === 'login' ? 'Login' : 'Create Account';
+    document.getElementById('auth-alert').style.display = 'none';
+  }
+
+  /* ── Handle Auth ──────────────────────────────────────────── */
+  function extractErrorMessage(data, fallback) {
+    if (typeof data === 'string') return data;
+    if (data && data.message) return data.message;
+    if (data && data.error) return data.error;
+    
+    // If it's an object with dynamic properties (like validation errors)
+    if (typeof data === 'object' && data !== null) {
+      const msgs = [];
+      for (const [key, val] of Object.entries(data)) {
+        if (key !== 'success' && key !== 'token' && typeof val === 'string') {
+          msgs.push(`${key}: ${val}`);
+        }
+      }
+      if (msgs.length > 0) return msgs.join(', ');
+    }
+    return fallback;
+  }
+
+  async function handleAuth(e) {
+    e.preventDefault();
+    const username = document.getElementById('auth-username').value.trim();
+    const password = document.getElementById('auth-password').value;
+    const btn  = document.getElementById('auth-btn');
+    const alert = document.getElementById('auth-alert');
+    alert.style.display = 'none';
+
+    setLoading(btn, true, currentAuthTab === 'login' ? 'Logging in…' : 'Creating account…');
+
+    try {
+      const endpoint = currentAuthTab === 'login' ? '/api/v1/admin/login' : '/api/v1/admin/signup';
+      const res = await fetch(BASE_URL + endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      });
+      const data = await res.json().catch(() => ({}));
+
+      if (currentAuthTab === 'login') {
+        if (res.ok && data.token) {
+          authToken = data.token;
+          authUser  = username;
+          localStorage.setItem('sj_admin_token', authToken);
+          localStorage.setItem('sj_admin_user', authUser);
+          showDashboard();
+          toast('Logged in successfully! 🎉', 'success');
+        } else {
+          showAuthAlert(extractErrorMessage(data, 'Login failed'));
+        }
+      } else {
+        if (res.ok) {
+          toast('Account created! You can now login.', 'success');
+          switchAuthTab('login');
+        } else {
+          showAuthAlert(extractErrorMessage(data, 'Signup failed'));
+        }
+      }
+    } catch (err) {
+      showAuthAlert('Cannot connect to server. Check if API is running.');
+    } finally {
+      setLoading(btn, false, currentAuthTab === 'login' ? 'Login' : 'Create Account');
+    }
+  }
+
+  function showAuthAlert(msg) {
+    const el = document.getElementById('auth-alert');
+    document.getElementById('auth-alert-msg').textContent = msg;
+    el.style.display = 'flex';
+  }
+
+  /* ── Show Dashboard ───────────────────────────────────────── */
+  function showDashboard() {
+    document.getElementById('auth-screen').style.display = 'none';
+    document.getElementById('dashboard').style.display = 'flex';
+    document.getElementById('sidebar-user').textContent = authUser || 'Admin';
+  }
+
+  /* ── Logout ───────────────────────────────────────────────── */
+  function logout() {
+    authToken = '';
+    authUser  = '';
+    localStorage.removeItem('sj_admin_token');
+    localStorage.removeItem('sj_admin_user');
+    document.getElementById('auth-screen').style.display = 'flex';
+    document.getElementById('dashboard').style.display = 'none';
+    toast('Logged out', 'success');
+  }
+
+  /* ── Navigation ───────────────────────────────────────────── */
+  const pageMap = {
+    overview: { title: 'Dashboard', sub: 'Welcome to the SJ Kids Admin Panel' },
+    levels:   { title: 'Levels & General Questions', sub: 'Upload primary level mappings and flashcard content' },
+    games:    { title: 'Game Questions', sub: 'Quiz, Feed the Animal, Balloon Pop and standard games' },
+    match:    { title: 'Match the Following', sub: 'Upload question pairs for the matching mini-game' },
+    wordhunt: { title: 'Word Hunt', sub: 'Upload the Word Hunt question bank' },
+    checker:  { title: 'Question Count Checker', sub: 'Verify game question availability' },
+  };
+
+  function showPage(name) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById('page-' + name).classList.add('active');
+    document.getElementById('nav-' + name).classList.add('active');
+    const info = pageMap[name];
+    document.getElementById('topbar-title').textContent = info.title;
+    document.getElementById('topbar-sub').textContent   = info.sub;
+  }
+
+  /* ── File Select ──────────────────────────────────────────── */
+  function handleFileSelect(input, dzId, fnId) {
+    const dz = document.getElementById(dzId);
+    const fn = document.getElementById(fnId);
+    if (input.files && input.files[0]) {
+      dz.classList.add('has-file');
+      fn.textContent = '📎 ' + input.files[0].name;
+    } else {
+      dz.classList.remove('has-file');
+      fn.textContent = '';
+    }
+  }
+
+  /* ── Loading helper ───────────────────────────────────────── */
+  function setLoading(btn, loading, text) {
+    btn.disabled = loading;
+    btn.innerHTML = loading
+      ? `<span class="spinner"></span> ${text}`
+      : `<span>⬆️ ${text || 'Upload'}</span>`;
+  }
+
+  /* ── Render response ──────────────────────────────────────── */
+  function renderResponse(containerId, data, btnId) {
+    const el  = document.getElementById(containerId);
+    const btn = document.getElementById(btnId);
+    if (data.success) {
+      el.innerHTML = `
+        <div class="alert alert-success">
+          <span class="alert-icon">✅</span>
+          <div class="alert-body">
+            <div class="alert-title">Upload Successful!</div>
+            <div>${escHtml(data.message || 'Import completed.')}</div>
+          </div>
+        </div>`;
+      toast('Upload successful! ✅', 'success');
+      if (btn) { btn.innerHTML = '<span>⬆️ Upload</span>'; btn.disabled = false; }
+    } else {
+      let errHtml = '';
+      if (data.errors && data.errors.length) {
+        errHtml = '<ul class="error-list">' + data.errors.map(e => `<li>${escHtml(e)}</li>`).join('') + '</ul>';
+      }
+      el.innerHTML = `
+        <div class="alert alert-error">
+          <span class="alert-icon">❌</span>
+          <div class="alert-body">
+            <div class="alert-title">${escHtml(data.message || 'Upload failed')}</div>
+            ${errHtml}
+          </div>
+        </div>`;
+      toast('Upload failed ❌', 'error');
+      if (btn) { btn.innerHTML = '<span>⬆️ Upload</span>'; btn.disabled = false; }
+    }
+  }
+
+  function renderError(containerId, msg, btnId) {
+    const el  = document.getElementById(containerId);
+    const btn = document.getElementById(btnId);
+    el.innerHTML = `
+      <div class="alert alert-error">
+        <span class="alert-icon">⚠️</span>
+        <div class="alert-body">
+          <div class="alert-title">Request Failed</div>
+          <div>${escHtml(msg)}</div>
+        </div>
+      </div>`;
+    toast('Error: ' + msg, 'error');
+    if (btn) { btn.innerHTML = '<span>⬆️ Upload</span>'; btn.disabled = false; }
+  }
+
+  /* ── Upload Levels ────────────────────────────────────────── */
+  async function uploadLevels(e) {
+    e.preventDefault();
+    const btn = document.getElementById('btn-levels');
+    setLoading(btn, true, 'Uploading…');
+    document.getElementById('res-levels').innerHTML = '';
+
+    const fd = new FormData();
+    const excelFile = document.getElementById('levels-excel').files[0];
+    const zipFile   = document.getElementById('levels-zip').files[0];
+    fd.append('excel_file', excelFile);
+    if (zipFile) fd.append('media_zip', zipFile);
+
+    try {
+      const res = await fetch(BASE_URL + '/api/v1/admin/content/levels/upload', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + authToken },
+        body: fd
+      });
+      const data = await res.json();
+      renderResponse('res-levels', data, 'btn-levels');
+    } catch (err) {
+      renderError('res-levels', err.message || 'Network error', 'btn-levels');
+    }
+  }
+
+  /* ── Upload Game Questions ────────────────────────────────── */
+  const gameEndpoints = {
+    games:    '/api/v1/admin/content/games/questions/upload',
+    match:    '/api/v1/admin/content/games/match-following/upload',
+    wordhunt: '/api/v1/admin/content/games/word-hunt/upload',
+  };
+
+  async function uploadGame(e, type) {
+    e.preventDefault();
+    const btn = document.getElementById('btn-' + type);
+    setLoading(btn, true, 'Uploading…');
+    document.getElementById('res-' + type).innerHTML = '';
+
+    const fd = new FormData();
+    fd.append('standard_id', document.getElementById(type + '-standard').value);
+    fd.append('game_id',     document.getElementById(type + '-gameid').value);
+    fd.append('overwrite',   document.getElementById(type + '-overwrite').checked ? 'true' : 'false');
+    fd.append('excel_file',  document.getElementById(type + '-excel').files[0]);
+
+    try {
+      const res = await fetch(BASE_URL + gameEndpoints[type], {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + authToken },
+        body: fd
+      });
+      const data = await res.json();
+      renderResponse('res-' + type, data, 'btn-' + type);
+    } catch (err) {
+      renderError('res-' + type, err.message || 'Network error', 'btn-' + type);
+    }
+  }
+
+  /* ── Check Question Count ─────────────────────────────────── */
+  async function checkCount(e) {
+    e.preventDefault();
+    const btn = document.getElementById('btn-check');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> Checking…';
+    document.getElementById('res-checker').innerHTML = '';
+    document.getElementById('count-result').classList.remove('show');
+
+    const gameId     = document.getElementById('check-gameid').value;
+    const standardId = document.getElementById('check-standard').value;
+
+    try {
+      const res = await fetch(
+        `${BASE_URL}/api/v1/admin/content/games/questions/count?game_id=${gameId}&standard_id=${standardId}`,
+        { headers: { 'Authorization': 'Bearer ' + authToken } }
+      );
+      const json = await res.json();
+
+      if (res.ok && json.success) {
+        const d = json.data;
+        document.getElementById('cr-gameid').textContent   = d.game_id;
+        document.getElementById('cr-standard').textContent = d.standard_id;
+        document.getElementById('cr-total').textContent    = d.total_questions;
+        const avEl = document.getElementById('cr-avail');
+        avEl.textContent  = d.is_available ? '✅ Available' : '❌ Not enough questions';
+        avEl.className    = 'count-val ' + (d.is_available ? 'avail-yes' : 'avail-no');
+        document.getElementById('count-result').classList.add('show');
+        toast('Count fetched ✅', 'success');
+      } else {
+        document.getElementById('res-checker').innerHTML = `
+          <div class="alert alert-error">
+            <span class="alert-icon">❌</span>
+            <div class="alert-body">${escHtml(json.message || 'Failed to fetch count')}</div>
+          </div>`;
+        toast('Error fetching count', 'error');
+      }
+    } catch (err) {
+      document.getElementById('res-checker').innerHTML = `
+        <div class="alert alert-error">
+          <span class="alert-icon">⚠️</span>
+          <div class="alert-body">${escHtml(err.message || 'Network error')}</div>
+        </div>`;
+      toast('Network error', 'error');
+    } finally {
+      btn.innerHTML = '<span>🔍 Check Count</span>';
+      btn.disabled = false;
+    }
+  }
+
+  /* ── Toast ────────────────────────────────────────────────── */
+  function toast(msg, type = 'success') {
+    const icon = type === 'success' ? '✅' : '❌';
+    const el = document.createElement('div');
+    el.className = `toast ${type}`;
+    el.innerHTML = `<span>${icon}</span> <span>${escHtml(msg)}</span>`;
+    document.getElementById('toast-container').appendChild(el);
+    setTimeout(() => {
+      el.style.animation = 'fadeOut .3s ease forwards';
+      setTimeout(() => el.remove(), 300);
+    }, 3500);
+  }
+
+  /* ── Escape HTML ──────────────────────────────────────────── */
+  function escHtml(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  /* ── Drag & Drop visual ───────────────────────────────────── */
+  document.addEventListener('dragover', (e) => {
+    const dz = e.target.closest('.drop-zone');
+    if (dz) { e.preventDefault(); dz.classList.add('dragover'); }
+  });
+  document.addEventListener('dragleave', (e) => {
+    const dz = e.target.closest('.drop-zone');
+    if (dz) dz.classList.remove('dragover');
+  });
+  document.addEventListener('drop', (e) => {
+    document.querySelectorAll('.drop-zone').forEach(d => d.classList.remove('dragover'));
+  });
+</script>
+</body>
+</html>
