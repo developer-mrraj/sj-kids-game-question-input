@@ -621,6 +621,17 @@
                   <div class="file-name" id="fn-match-excel"></div>
                 </div>
               </div>
+              <div class="form-group full">
+                <label>MEDIA ZIP — Optional</label>
+                <div class="drop-zone" id="dz-match-zip">
+                  <input type="file" id="match-zip" accept=".zip" onchange="handleFileSelect(this,'dz-match-zip','fn-match-zip')" />
+                  <div class="drop-icon">🗜️</div>
+                  <div class="drop-title">Drop media ZIP here (optional)</div>
+                  <div class="drop-sub">Images for questions and options</div>
+                  <span class="drop-chip">.zip</span>
+                  <div class="file-name" id="fn-match-zip"></div>
+                </div>
+              </div>
             </div>
             <div style="margin-top:20px">
               <button type="submit" class="btn btn-primary" id="btn-match">
@@ -964,7 +975,13 @@
         headers: { 'Authorization': 'Bearer ' + authToken },
         body: fd
       });
-      const data = await res.json();
+      const text = await res.text();
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch (e) {
+        throw new Error(res.ok ? 'Invalid JSON response' : text.substring(0, 100) || `Server error ${res.status}`);
+      }
       renderResponse('res-levels', data, 'btn-levels');
     } catch (err) {
       renderError('res-levels', err.message || 'Network error', 'btn-levels');
@@ -990,13 +1007,24 @@
     fd.append('overwrite',   document.getElementById(type + '-overwrite').checked ? 'true' : 'false');
     fd.append('excel_file',  document.getElementById(type + '-excel').files[0]);
 
+    const zipInput = document.getElementById(type + '-zip');
+    if (zipInput && zipInput.files[0]) {
+      fd.append('media_zip', zipInput.files[0]);
+    }
+
     try {
       const res = await fetch(BASE_URL + gameEndpoints[type], {
         method: 'POST',
         headers: { 'Authorization': 'Bearer ' + authToken },
         body: fd
       });
-      const data = await res.json();
+      const text = await res.text();
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch (e) {
+        throw new Error(res.ok ? 'Invalid JSON response' : text.substring(0, 100) || `Server error ${res.status}`);
+      }
       renderResponse('res-' + type, data, 'btn-' + type);
     } catch (err) {
       renderError('res-' + type, err.message || 'Network error', 'btn-' + type);
@@ -1020,7 +1048,13 @@
         `${BASE_URL}/api/v1/admin/content/games/questions/count?game_id=${gameId}&standard_id=${standardId}`,
         { headers: { 'Authorization': 'Bearer ' + authToken } }
       );
-      const json = await res.json();
+      const text = await res.text();
+      let json;
+      try {
+        json = JSON.parse(text);
+      } catch (e) {
+        throw new Error(res.ok ? 'Invalid JSON response' : text.substring(0, 100) || `Server error ${res.status}`);
+      }
 
       if (res.ok && json.success) {
         const d = json.data;
