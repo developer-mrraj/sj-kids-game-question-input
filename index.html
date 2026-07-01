@@ -354,7 +354,7 @@
     </div>
 
     <div style="margin-top:20px; text-align:center; font-size:12px; color:var(--muted)">
-      Connected to <code style="color:var(--accent2); font-size:11px">192.168.1.3:8080</code>
+      Connected to <code style="color:var(--accent2); font-size:11px">192.168.1.10:8081</code>
     </div>
   </div>
 </div>
@@ -450,6 +450,38 @@
         <div class="card">
           <div class="card-header">
             <div>
+              <div class="card-title">📊 Content Overview <span class="badge badge-get">GET</span></div>
+              <div class="card-desc">Total questions uploaded per Standard and Module</div>
+              <div class="endpoint-pill">GET /api/v1/admin/content/dashboard/stats</div>
+            </div>
+            <button class="btn btn-ghost" onclick="fetchDashboardStats()" style="padding: 6px 12px; font-size: 11px;">
+              🔄 Refresh
+            </button>
+          </div>
+          <div id="dashboard-stats-container" style="overflow-x:auto;">
+             <div style="padding:20px; color:var(--muted); text-align:center;">Loading stats...</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">🎮 Games Overview <span class="badge badge-get">GET</span></div>
+              <div class="card-desc">Total questions mapped to multiplayer games per Standard</div>
+              <div class="endpoint-pill">GET /api/v1/admin/content/dashboard/games/stats</div>
+            </div>
+            <button class="btn btn-ghost" onclick="fetchGamesDashboardStats()" style="padding: 6px 12px; font-size: 11px;">
+              🔄 Refresh
+            </button>
+          </div>
+          <div id="games-dashboard-stats-container" style="overflow-x:auto;">
+             <div style="padding:20px; color:var(--muted); text-align:center;">Loading stats...</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div>
               <div class="card-title">🚀 Quick Start Guide</div>
               <div class="card-desc">Follow these steps to upload content</div>
             </div>
@@ -482,47 +514,105 @@
 
       <!-- ── PAGE: Levels & General Questions ───────────────── -->
       <div class="page" id="page-levels">
-        <div class="card">
-          <div class="card-header">
-            <div>
-              <div class="card-title">📚 Upload Levels & General Questions <span class="badge badge-post">POST</span></div>
-              <div class="card-desc">Upload the primary level mappings and flashcard content</div>
-              <div class="endpoint-pill">POST /api/v1/admin/content/levels/upload</div>
+        <div style="display: grid; grid-template-columns: 1fr; gap: 24px;">
+          <!-- Section A: Context Dashboard -->
+          <div class="card" style="margin-bottom:0;">
+            <div class="card-header">
+              <div>
+                <div class="card-title">🔍 Context Dashboard (Checker) <span class="badge badge-get">GET</span></div>
+                <div class="card-desc">Check where you left off for a specific standard and module</div>
+                <div class="endpoint-pill">GET /api/v1/admin/content/levels/*</div>
+              </div>
             </div>
+            
+            <div class="form-grid">
+              <div class="form-group">
+                <label>STANDARD</label>
+                <select id="checker-standard" onchange="checkLevelStatus()">
+                  <option value="">-- Select Standard --</option>
+                  <option value="1">Standard 1</option>
+                  <option value="2">Standard 2</option>
+                  <option value="3">Standard 3</option>
+                  <option value="4">Standard 4</option>
+                  <option value="5">Standard 5</option>
+                  <option value="6">Standard 6</option>
+                  <option value="7">Standard 7</option>
+                  <option value="8">Standard 8</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>MODULE</label>
+                <select id="checker-module" onchange="checkLevelStatus()">
+                  <option value="">-- Select Module --</option>
+                  <option value="1">Timeless Stories (1)</option>
+                  <option value="2">Heroes & Festivals (2)</option>
+                  <option value="3">Nature's Wonders (3)</option>
+                  <option value="4">Science & Cosmos (4)</option>
+                  <option value="5">Art & Culture (5)</option>
+                </select>
+              </div>
+            </div>
+            
+            <div id="checker-summary" style="display:none; margin-top:20px; background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:16px 20px;">
+              <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border); padding-bottom:10px; margin-bottom:10px;">
+                <span style="color:var(--muted); font-size:13px;">Current Highest Level</span>
+                <span style="font-weight:700; font-size:16px;" id="val-max-order">-</span>
+              </div>
+              <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border); padding-bottom:10px; margin-bottom:10px;">
+                <span style="color:var(--muted); font-size:13px;">Total Questions Inserted</span>
+                <span style="font-weight:700; font-size:16px;" id="val-total-questions">-</span>
+              </div>
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span style="color:var(--muted); font-size:13px;">Next Expected Level Order</span>
+                <span style="font-weight:700; font-size:16px; color:var(--success);" id="val-next-order">-</span>
+              </div>
+            </div>
+            <div id="checker-error" style="display:none; margin-top:20px; color:var(--error); font-size:13px;"></div>
           </div>
 
-          <form id="form-levels" onsubmit="uploadLevels(event)">
-            <div class="form-grid">
-              <div class="form-group full">
-                <label>EXCEL FILE (.xlsx) — Required</label>
-                <div class="drop-zone" id="dz-levels-excel">
-                  <input type="file" id="levels-excel" accept=".xlsx" onchange="handleFileSelect(this,'dz-levels-excel','fn-levels-excel')" required />
-                  <div class="drop-icon">📊</div>
-                  <div class="drop-title">Drop your Excel file here</div>
-                  <div class="drop-sub">Contains Levels and Questions sheets</div>
-                  <span class="drop-chip">.xlsx</span>
-                  <div class="file-name" id="fn-levels-excel"></div>
-                </div>
-              </div>
-              <div class="form-group full">
-                <label>MEDIA ZIP — Optional</label>
-                <div class="drop-zone" id="dz-levels-zip">
-                  <input type="file" id="levels-zip" accept=".zip" onchange="handleFileSelect(this,'dz-levels-zip','fn-levels-zip')" />
-                  <div class="drop-icon">🗜️</div>
-                  <div class="drop-title">Drop media ZIP here (optional)</div>
-                  <div class="drop-sub">Images for questions and options</div>
-                  <span class="drop-chip">.zip</span>
-                  <div class="file-name" id="fn-levels-zip"></div>
-                </div>
+          <!-- Section B: Upload Form -->
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <div class="card-title">📚 Upload Levels & General Questions <span class="badge badge-post">POST</span></div>
+                <div class="card-desc">Upload the primary level mappings and flashcard content</div>
+                <div class="endpoint-pill">POST /api/v1/admin/content/levels/upload</div>
               </div>
             </div>
-            <div style="margin-top:20px">
-              <button type="submit" class="btn btn-primary" id="btn-levels">
-                <span>⬆️ Upload</span>
-              </button>
-            </div>
-          </form>
-          <div id="res-levels"></div>
+
+            <form id="form-levels" onsubmit="uploadLevels(event)">
+              <div class="form-grid">
+                <div class="form-group full">
+                  <label>EXCEL FILE (.xlsx) — Required</label>
+                  <div class="drop-zone" id="dz-levels-excel">
+                    <input type="file" id="levels-excel" accept=".xlsx" onchange="handleLevelsFileSelect(this,'dz-levels-excel','fn-levels-excel')" required />
+                    <div class="drop-icon">📊</div>
+                    <div class="drop-title">Drop your Excel file here</div>
+                    <div class="drop-sub">Contains Levels and Questions sheets</div>
+                    <span class="drop-chip">.xlsx</span>
+                    <div class="file-name" id="fn-levels-excel"></div>
+                  </div>
+                </div>
+                <div class="form-group full">
+                  <label>MEDIA ZIP — Optional</label>
+                  <div class="drop-zone" id="dz-levels-zip">
+                    <input type="file" id="levels-zip" accept=".zip" onchange="handleFileSelect(this,'dz-levels-zip','fn-levels-zip')" />
+                    <div class="drop-icon">🗜️</div>
+                    <div class="drop-title">Drop media ZIP here (optional)</div>
+                    <div class="drop-sub">Images for questions and options</div>
+                    <span class="drop-chip">.zip</span>
+                    <div class="file-name" id="fn-levels-zip"></div>
+                  </div>
+                </div>
+              </div>
+              <div style="margin-top:20px">
+                <button type="submit" class="btn btn-primary" id="btn-levels" disabled data-default-text="Upload Levels & Content">
+                  <span>⬆️ Upload Levels & Content</span>
+                </button>
+              </div>
+            </form>
+            <div id="res-levels"></div>
+          </div>
         </div>
       </div>
 
@@ -709,38 +799,23 @@
           <form onsubmit="checkCount(event)">
             <div class="form-grid">
               <div class="form-group">
-                <label>GAME ID</label>
-                <input type="number" id="check-gameid" placeholder="e.g. 15" required min="1" />
+                <label>MAX MODULE/GAME ID</label>
+                <input type="number" id="check-max-gameid" value="17" required min="1" />
               </div>
               <div class="form-group">
-                <label>STANDARD ID</label>
-                <input type="number" id="check-standard" placeholder="e.g. 2" required min="1" />
+                <label>MAX STANDARD ID</label>
+                <input type="number" id="check-max-standard" value="5" required min="1" />
               </div>
             </div>
             <div style="margin-top:20px">
               <button type="submit" class="btn btn-ghost" id="btn-check">
-                <span>🔍 Check Count</span>
+                <span>🔍 Load Live Matrix</span>
               </button>
             </div>
           </form>
 
-          <div class="count-result" id="count-result">
-            <div class="count-row">
-              <span class="count-key">Game ID</span>
-              <span class="count-val" id="cr-gameid">–</span>
-            </div>
-            <div class="count-row">
-              <span class="count-key">Standard ID</span>
-              <span class="count-val" id="cr-standard">–</span>
-            </div>
-            <div class="count-row">
-              <span class="count-key">Total Questions</span>
-              <span class="count-val" id="cr-total">–</span>
-            </div>
-            <div class="count-row">
-              <span class="count-key">Availability</span>
-              <span class="count-val" id="cr-avail">–</span>
-            </div>
+          <div id="count-matrix-container" style="margin-top:24px; overflow-x:auto;">
+             <!-- Table will be generated here -->
           </div>
           <div id="res-checker"></div>
         </div>
@@ -755,7 +830,7 @@
 
 <script>
   // Use empty string so requests go to the same origin (our local proxy server)
-  const BASE_URL = '';
+  const BASE_URL = 'http://localhost:3000';
   let authToken = localStorage.getItem('sj_admin_token') || '';
   let authUser  = localStorage.getItem('sj_admin_user') || '';
   let currentAuthTab = 'login';
@@ -849,11 +924,127 @@
     el.style.display = 'flex';
   }
 
+  /* ── Dashboard Stats (Content Overview) ───────────────────── */
+  async function fetchDashboardStats() {
+    const container = document.getElementById('dashboard-stats-container');
+    if (!container) return;
+    
+    container.innerHTML = '<div style="padding:20px; color:var(--muted); text-align:center;"><span class="spinner" style="border-color:var(--muted); border-top-color:transparent; margin-right:8px; vertical-align:-3px;"></span> Loading stats...</div>';
+    
+    try {
+      const res = await fetch(`${BASE_URL}/api/v1/admin/content/dashboard/stats`, {
+        headers: { 'Authorization': 'Bearer ' + authToken }
+      });
+      const json = await res.json();
+      
+      if (!json.success) throw new Error(json.message || 'Failed to fetch stats');
+      
+      const data = json.data || [];
+      if (data.length === 0) {
+        container.innerHTML = '<div style="padding:20px; color:var(--muted); text-align:center;">No standard data available.</div>';
+        return;
+      }
+
+      const modules = data[0].modules || [];
+      
+      let tableHtml = '<table style="width:100%; border-collapse: collapse; text-align:center; font-size: 13.5px;">';
+      tableHtml += '<thead><tr><th style="padding:12px; border-bottom:1px solid var(--border); color:var(--muted); font-weight:600; text-align:left; white-space:nowrap;">Standard</th>';
+      
+      modules.forEach(m => {
+        tableHtml += `<th style="padding:12px 8px; border-bottom:1px solid var(--border); color:var(--muted); font-weight:600; line-height:1.3; min-width:80px;">${escHtml(m.module_name)}</th>`;
+      });
+      tableHtml += '</tr></thead><tbody>';
+      
+      data.forEach(std => {
+        tableHtml += `<tr><td style="padding:12px; border-bottom:1px solid var(--border); font-weight:700; color:var(--text); text-align:left; white-space:nowrap;">${escHtml(std.standard_name)}</td>`;
+        
+        (std.modules || []).forEach(m => {
+          const count = m.question_count || 0;
+          let color = count > 0 ? 'var(--success)' : 'var(--muted)';
+          let bg = count > 0 ? 'rgba(34,211,167,.1)' : 'transparent';
+          let weight = count > 0 ? '700' : '400';
+          
+          tableHtml += `<td style="padding:12px; border-bottom:1px solid var(--border);">
+            <div style="display:inline-block; padding:4px 10px; border-radius:6px; background:${bg}; color:${color}; font-weight:${weight}; font-size:12px;">
+              ${count}
+            </div>
+          </td>`;
+        });
+        tableHtml += '</tr>';
+      });
+      tableHtml += '</tbody></table>';
+      
+      container.innerHTML = tableHtml;
+      
+    } catch (err) {
+      container.innerHTML = `<div style="padding:20px; color:var(--error); text-align:center;">⚠️ ${escHtml(err.message)}</div>`;
+    }
+  }
+
+  /* ── Games Dashboard Stats (Games Overview) ───────────────────── */
+  async function fetchGamesDashboardStats() {
+    const container = document.getElementById('games-dashboard-stats-container');
+    if (!container) return;
+    
+    container.innerHTML = '<div style="padding:20px; color:var(--muted); text-align:center;"><span class="spinner" style="border-color:var(--muted); border-top-color:transparent; margin-right:8px; vertical-align:-3px;"></span> Loading stats...</div>';
+    
+    try {
+      const res = await fetch(`${BASE_URL}/api/v1/admin/content/dashboard/games/stats`, {
+        headers: { 'Authorization': 'Bearer ' + authToken }
+      });
+      const json = await res.json();
+      
+      if (!json.success) throw new Error(json.message || 'Failed to fetch games stats');
+      
+      const data = json.data || [];
+      if (data.length === 0) {
+        container.innerHTML = '<div style="padding:20px; color:var(--muted); text-align:center;">No standard data available.</div>';
+        return;
+      }
+
+      const games = data[0].games || [];
+      
+      let tableHtml = '<table style="width:100%; border-collapse: collapse; text-align:center; font-size: 13.5px;">';
+      tableHtml += '<thead><tr><th style="padding:12px; border-bottom:1px solid var(--border); color:var(--muted); font-weight:600; text-align:left; white-space:nowrap;">Standard</th>';
+      
+      games.forEach(g => {
+        tableHtml += `<th style="padding:12px 8px; border-bottom:1px solid var(--border); color:var(--muted); font-weight:600; line-height:1.3; min-width:80px;">${escHtml(g.game_name)}</th>`;
+      });
+      tableHtml += '</tr></thead><tbody>';
+      
+      data.forEach(std => {
+        tableHtml += `<tr><td style="padding:12px; border-bottom:1px solid var(--border); font-weight:700; color:var(--text); text-align:left; white-space:nowrap;">${escHtml(std.standard_name)}</td>`;
+        
+        (std.games || []).forEach(g => {
+          const count = g.question_count || 0;
+          let color = count > 0 ? 'var(--success)' : 'var(--muted)';
+          let bg = count > 0 ? 'rgba(34,211,167,.1)' : 'transparent';
+          let weight = count > 0 ? '700' : '400';
+          
+          tableHtml += `<td style="padding:12px; border-bottom:1px solid var(--border);">
+            <div style="display:inline-block; padding:4px 10px; border-radius:6px; background:${bg}; color:${color}; font-weight:${weight}; font-size:12px;">
+              ${count}
+            </div>
+          </td>`;
+        });
+        tableHtml += '</tr>';
+      });
+      tableHtml += '</tbody></table>';
+      
+      container.innerHTML = tableHtml;
+      
+    } catch (err) {
+      container.innerHTML = `<div style="padding:20px; color:var(--error); text-align:center;">⚠️ ${escHtml(err.message)}</div>`;
+    }
+  }
+
   /* ── Show Dashboard ───────────────────────────────────────── */
   function showDashboard() {
     document.getElementById('auth-screen').style.display = 'none';
     document.getElementById('dashboard').style.display = 'flex';
     document.getElementById('sidebar-user').textContent = authUser || 'Admin';
+    fetchDashboardStats();
+    fetchGamesDashboardStats();
   }
 
   /* ── Logout ───────────────────────────────────────────────── */
@@ -903,9 +1094,10 @@
   /* ── Loading helper ───────────────────────────────────────── */
   function setLoading(btn, loading, text) {
     btn.disabled = loading;
+    const defaultText = btn.dataset.defaultText || 'Upload';
     btn.innerHTML = loading
       ? `<span class="spinner"></span> ${text}`
-      : `<span>⬆️ ${text || 'Upload'}</span>`;
+      : `<span>⬆️ ${text || defaultText}</span>`;
   }
 
   /* ── Render response ──────────────────────────────────────── */
@@ -922,7 +1114,7 @@
           </div>
         </div>`;
       toast('Upload successful! ✅', 'success');
-      if (btn) { btn.innerHTML = '<span>⬆️ Upload</span>'; btn.disabled = false; }
+      if (btn) { btn.innerHTML = `<span>⬆️ ${btn.dataset.defaultText || 'Upload'}</span>`; btn.disabled = false; }
     } else {
       let errHtml = '';
       if (data.errors && data.errors.length) {
@@ -937,7 +1129,7 @@
           </div>
         </div>`;
       toast('Upload failed ❌', 'error');
-      if (btn) { btn.innerHTML = '<span>⬆️ Upload</span>'; btn.disabled = false; }
+      if (btn) { btn.innerHTML = `<span>⬆️ ${btn.dataset.defaultText || 'Upload'}</span>`; btn.disabled = false; }
     }
   }
 
@@ -953,7 +1145,55 @@
         </div>
       </div>`;
     toast('Error: ' + msg, 'error');
-    if (btn) { btn.innerHTML = '<span>⬆️ Upload</span>'; btn.disabled = false; }
+    if (btn) { btn.innerHTML = `<span>⬆️ ${btn.dataset.defaultText || 'Upload'}</span>`; btn.disabled = false; }
+  }
+
+  /* ── Context Dashboard (Checker) ──────────────────────────── */
+  async function checkLevelStatus() {
+    const stdId = document.getElementById('checker-standard').value;
+    const modId = document.getElementById('checker-module').value;
+    
+    if (!stdId || !modId) {
+      document.getElementById('checker-summary').style.display = 'none';
+      document.getElementById('checker-error').style.display = 'none';
+      return;
+    }
+    
+    document.getElementById('checker-summary').style.display = 'none';
+    document.getElementById('checker-error').style.display = 'none';
+    
+    try {
+      const [resOrder, resStats] = await Promise.all([
+        fetch(`${BASE_URL}/api/v1/admin/content/levels/max-order?standard_id=${stdId}&module_id=${modId}`, {
+          headers: { 'Authorization': 'Bearer ' + authToken }
+        }),
+        fetch(`${BASE_URL}/api/v1/admin/content/levels/stats?standard_id=${stdId}&module_id=${modId}`, {
+          headers: { 'Authorization': 'Bearer ' + authToken }
+        })
+      ]);
+      
+      const orderData = await resOrder.json();
+      const statsData = await resStats.json();
+      
+      if (orderData.success && statsData.success) {
+        document.getElementById('val-max-order').textContent = orderData.max_order || 0;
+        document.getElementById('val-total-questions').textContent = statsData.total_questions || 0;
+        document.getElementById('val-next-order').textContent = ((orderData.max_order || 0) + 1) + ' (Auto-Assigned)';
+        document.getElementById('checker-summary').style.display = 'block';
+      } else {
+        throw new Error(orderData.message || statsData.message || 'Failed to fetch level stats');
+      }
+    } catch (err) {
+      const errEl = document.getElementById('checker-error');
+      errEl.textContent = 'Error checking status: ' + err.message;
+      errEl.style.display = 'block';
+    }
+  }
+
+  function handleLevelsFileSelect(input, dzId, fnId) {
+    handleFileSelect(input, dzId, fnId);
+    const btn = document.getElementById('btn-levels');
+    btn.disabled = !(input.files && input.files.length > 0);
   }
 
   /* ── Upload Levels ────────────────────────────────────────── */
@@ -983,6 +1223,10 @@
         throw new Error(res.ok ? 'Invalid JSON response' : text.substring(0, 100) || `Server error ${res.status}`);
       }
       renderResponse('res-levels', data, 'btn-levels');
+      if (data.success) {
+        checkLevelStatus();
+        fetchDashboardStats();
+      }
     } catch (err) {
       renderError('res-levels', err.message || 'Network error', 'btn-levels');
     }
@@ -1026,6 +1270,9 @@
         throw new Error(res.ok ? 'Invalid JSON response' : text.substring(0, 100) || `Server error ${res.status}`);
       }
       renderResponse('res-' + type, data, 'btn-' + type);
+      if (data.success) {
+        fetchGamesDashboardStats();
+      }
     } catch (err) {
       renderError('res-' + type, err.message || 'Network error', 'btn-' + type);
     }
@@ -1036,55 +1283,106 @@
     e.preventDefault();
     const btn = document.getElementById('btn-check');
     btn.disabled = true;
-    btn.innerHTML = '<span class="spinner"></span> Checking…';
+    btn.innerHTML = '<span class="spinner"></span> Loading Matrix…';
     document.getElementById('res-checker').innerHTML = '';
-    document.getElementById('count-result').classList.remove('show');
+    
+    const maxGameId = parseInt(document.getElementById('check-max-gameid').value) || 17;
+    const maxStandardId = parseInt(document.getElementById('check-max-standard').value) || 5;
+    
+    const container = document.getElementById('count-matrix-container');
+    
+    const gameNames = {
+        1: 'Space Explorer',
+        2: 'Road Race',
+        3: 'Boat Race',
+        4: 'Number Ninja',
+        5: 'Arena Clash',
+        6: 'Hacker Arena',
+        7: 'Mars Colony',
+        8: 'Animal Rescue',
+        9: 'Earth Defense',
+        10: 'Food Chain',
+        11: 'Feed the Animal',
+        12: 'Word Hunt',
+        13: 'Spy Mission',
+        14: 'Grammar Clash',
+        15: 'Word Balloon Pop',
+        16: 'Word Battle',
+        17: 'Match It'
+    };
 
-    const gameId     = document.getElementById('check-gameid').value;
-    const standardId = document.getElementById('check-standard').value;
-
-    try {
-      const res = await fetch(
-        `${BASE_URL}/api/v1/admin/content/games/questions/count?game_id=${gameId}&standard_id=${standardId}`,
-        { headers: { 'Authorization': 'Bearer ' + authToken } }
-      );
-      const text = await res.text();
-      let json;
-      try {
-        json = JSON.parse(text);
-      } catch (e) {
-        throw new Error(res.ok ? 'Invalid JSON response' : text.substring(0, 100) || `Server error ${res.status}`);
-      }
-
-      if (res.ok && json.success) {
-        const d = json.data;
-        document.getElementById('cr-gameid').textContent   = d.game_id;
-        document.getElementById('cr-standard').textContent = d.standard_id;
-        document.getElementById('cr-total').textContent    = d.total_questions;
-        const avEl = document.getElementById('cr-avail');
-        avEl.textContent  = d.is_available ? '✅ Available' : '❌ Not enough questions';
-        avEl.className    = 'count-val ' + (d.is_available ? 'avail-yes' : 'avail-no');
-        document.getElementById('count-result').classList.add('show');
-        toast('Count fetched ✅', 'success');
-      } else {
-        document.getElementById('res-checker').innerHTML = `
-          <div class="alert alert-error">
-            <span class="alert-icon">❌</span>
-            <div class="alert-body">${escHtml(json.message || 'Failed to fetch count')}</div>
-          </div>`;
-        toast('Error fetching count', 'error');
-      }
-    } catch (err) {
-      document.getElementById('res-checker').innerHTML = `
-        <div class="alert alert-error">
-          <span class="alert-icon">⚠️</span>
-          <div class="alert-body">${escHtml(err.message || 'Network error')}</div>
-        </div>`;
-      toast('Network error', 'error');
-    } finally {
-      btn.innerHTML = '<span>🔍 Check Count</span>';
-      btn.disabled = false;
+    // Build initial table
+    let tableHtml = '<table style="width:100%; border-collapse: collapse; text-align:center; font-size: 13.5px;">';
+    tableHtml += '<thead><tr><th style="padding:12px; border-bottom:1px solid var(--border); color:var(--muted); font-weight:600; text-align:left;">Module / Std</th>';
+    for(let s=1; s<=maxStandardId; s++) {
+        tableHtml += `<th style="padding:12px; border-bottom:1px solid var(--border); color:var(--muted); font-weight:600;">Std ${s}</th>`;
     }
+    tableHtml += '</tr></thead><tbody>';
+    
+    for(let g=1; g<=maxGameId; g++) {
+        const gameName = gameNames[g] || `Mod ${g}`;
+        tableHtml += `<tr><td style="padding:12px; border-bottom:1px solid var(--border); font-weight:600; color:var(--text); text-align:left; white-space:nowrap;">${g}. ${gameName}</td>`;
+        for(let s=1; s<=maxStandardId; s++) {
+            tableHtml += `<td id="cell-${g}-${s}" style="padding:12px; border-bottom:1px solid var(--border); color:var(--muted);">⏳</td>`;
+        }
+        tableHtml += '</tr>';
+    }
+    tableHtml += '</tbody></table>';
+    container.innerHTML = tableHtml;
+
+    const gameSlugs = {
+        1: 'space_race',
+        2: 'road_race',
+        3: 'boat_race',
+        4: 'number_ninja',
+        5: 'arena_clash',
+        6: 'hacker_arena',
+        7: 'mars_colony',
+        8: 'animal_rescue',
+        9: 'earth_defense',
+        10: 'food_chain',
+        11: 'feed_the_animal',
+        12: 'word_hunt',
+        13: 'spy_mission',
+        14: 'grammar_clash',
+        15: 'word_balloon_pop',
+        16: 'word_battle',
+        17: 'match_following'
+    };
+
+    const promises = [];
+    
+    for(let g=1; g<=maxGameId; g++) {
+        for(let s=1; s<=maxStandardId; s++) {
+            const slug = gameSlugs[g] || g;
+            const p = fetch(
+                `${BASE_URL}/api/v1/admin/content/games/questions/count?module=${slug}&standard_id=${s}`,
+                { headers: { 'Authorization': 'Bearer ' + authToken } }
+            )
+            .then(res => res.json())
+            .then(json => {
+                const cell = document.getElementById(`cell-${g}-${s}`);
+                if (json.success) {
+                    const d = json.data;
+                    const icon = d.is_available ? '✅' : '❌';
+                    const color = d.is_available ? 'var(--success)' : 'var(--error)';
+                    cell.innerHTML = `<span style="color:${color}; font-weight:600;">${d.total_questions}</span> <span style="font-size: 10px;">${icon}</span>`;
+                } else {
+                    cell.innerHTML = '<span title="Error" style="color:var(--error);">⚠️</span>';
+                }
+            })
+            .catch(err => {
+                document.getElementById(`cell-${g}-${s}`).innerHTML = '<span title="Network Error" style="color:var(--error);">⚠️</span>';
+            });
+            promises.push(p);
+        }
+    }
+    
+    await Promise.all(promises);
+    
+    btn.innerHTML = '<span>🔍 Load Live Matrix</span>';
+    btn.disabled = false;
+    toast('Matrix loaded ✅', 'success');
   }
 
   /* ── Toast ────────────────────────────────────────────────── */
