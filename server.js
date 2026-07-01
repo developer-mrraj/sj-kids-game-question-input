@@ -6,7 +6,7 @@ const path = require('path');
 const app = express();
 app.use(cors());
 const PORT = 3000;
-const API_URL = 'http://localhost:8081';
+const API_URL = 'http://192.168.1.10:8080';
 
 // const API_URL = 'http://192.168.1.9:8080';
 
